@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for bloglist-rk2gnq-little-smoke-4814 on 2026-03-27T17:53:18+01:00
+# fly.toml app configuration file generated for bloglist-rk2gnq-rough-butterfly-380 on 2026-03-27T19:08:00+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'bloglist-rk2gnq-little-smoke-4814'
+app = 'bloglist-rk2gnq-rough-butterfly-380'
 primary_region = 'cdg'
 
 [build]
@@ -18,5 +18,6 @@ primary_region = 'cdg'
 
 [[vm]]
   memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
