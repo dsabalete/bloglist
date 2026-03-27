@@ -119,6 +119,12 @@ jobs:
           key: node-modules-${{ hashFiles('client/package-lock.json', 'server/package-lock.json') }}
       - name: Build client
         run: npm run build --prefix client
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
+          retention-days: 1
 
   e2e:
     needs: [setup_and_test, build, check_skip]
@@ -155,21 +161,27 @@ jobs:
         run: npm test --prefix server
 
   deploy:
-    needs: [setup_and_test, check_skip]
+    needs: [setup_and_test, build, e2e, check_skip]
     if: |
       always() &&
       github.event_name == 'push' &&
       needs.check_skip.outputs.skip == 'false' &&
-      needs.setup_and_test.result == 'success'
+      needs.setup_and_test.result == 'success' &&
+      needs.build.result == 'success' &&
+      needs.e2e.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: client-dist
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be
         with:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       - name: Deploy app
-        run: flyctl deploy --remote-only --wait-timeout 60 --dockerfile ./Dockerfile
+        run: flyctl deploy --wait-timeout 180 --dockerfile ./Dockerfile
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
