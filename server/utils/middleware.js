@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const logger = require('./logger.js')
 const User = require('../models/user.js')
+const config = require('./config.js')
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method)
@@ -46,7 +47,7 @@ const userExtractor = async (request, response, next) => {
     return response.status(401).json({ error: 'token missing' })
   }
 
-  const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+  const decodedToken = jwt.verify(token, config.JWT_SECRET)
   if (!decodedToken.id) {
     return response.status(401).json({ error: 'token invalid' })
   }
