@@ -173,7 +173,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: client-dist
       - name: Setup Flyctl
