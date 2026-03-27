@@ -1,0 +1,27 @@
+{
+    "name": "bloglist",
+    "version": "1.0.0",
+    "description": "Bloglist application (frontend + backend)",
+    "private": true,
+    "scripts": {
+        "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\"",
+        "build": "npm run client:build",
+        "lint": "npm run client:lint && npm run server:lint",
+        "preview": "npm run client:preview",
+        "test": "npm run server:test",
+        "client:dev": "npm run dev --prefix client",
+        "client:build": "npm run build --prefix client",
+        "client:lint": "npm run lint --prefix client",
+        "client:preview": "npm run preview --prefix client",
+        "client:test": "npm run test --prefix client",
+        "server:start": "npm run start --prefix server",
+        "server:dev": "npm run dev --prefix server",
+        "server:test": "npm run test --prefix server",
+        "server:lint": "npm run lint --prefix server"
+    },
+    "author": "David Sabalete",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^9.0.0"
+    }
+}

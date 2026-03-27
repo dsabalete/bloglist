@@ -1,0 +1,228 @@
+name: Deployment pipeline
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  check_skip:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.skip.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check for \#skip in commit messages
+        id: skip
+        run: |
+          git fetch --prune --unshallow || true
+          SKIP=false
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}..${{ github.event.after }}"
+          fi
+
+          if git rev-parse --verify "${RANGE%%..*}" >/dev/null 2>&1 && git rev-parse --verify "${RANGE##*..}" >/dev/null 2>&1; then
+            echo "Checking commit range: $RANGE"
+            if git log --pretty=%B "$RANGE" | grep -iq "#skip"; then
+              SKIP=true
+            fi
+          else
+            echo "Revision range invalid or unavailable ($RANGE), checking latest commit only."
+            if git log --pretty=%B -n 1 | grep -iq "#skip"; then
+              SKIP=true
+            fi
+          fi
+
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+
+  install:
+    needs: [check_skip]
+    if: ${{ needs.check_skip.outputs.skip == 'false' || github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Cache node_modules
+        id: cache-nodes
+        uses: actions/cache@v5
+        with:
+          path: |
+            client/node_modules
+            server/node_modules
+          key: node-modules-${{ hashFiles('client/package-lock.json', 'server/package-lock.json') }}
+      - name: Install client dependencies
+        if: steps.cache-nodes.outputs.cache-hit != 'true'
+        run: npm ci --prefix client
+      - name: Install server dependencies
+        if: steps.cache-nodes.outputs.cache-hit != 'true'
+        run: npm ci --prefix server
+
+  setup_and_test:
+    needs: [install, check_skip]
+    if: ${{ needs.check_skip.outputs.skip == 'false' || github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Restore node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            client/node_modules
+            server/node_modules
+          key: node-modules-${{ hashFiles('client/package-lock.json', 'server/package-lock.json') }}
+      - name: Check style and run tests
+        run: |
+          npm run lint --prefix client
+          npm run lint --prefix server
+          npm test --prefix server
+
+  build:
+    needs: [install, check_skip]
+    if: ${{ needs.check_skip.outputs.skip == 'false' || github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Restore node_modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            client/node_modules
+            server/node_modules
+          key: node-modules-${{ hashFiles('client/package-lock.json', 'server/package-lock.json') }}
+      - name: Build client
+        run: npm run build --prefix client
+
+  e2e:
+    needs: [setup_and_test, build, check_skip]
+    if: ${{ needs.check_skip.outputs.skip == 'false' || github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Restore node_modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+      - name: Install Playwright system dependencies # 👈 always runs
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+      - name: Run Playwright tests
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  deploy-backend:
+    needs: [setup_and_test, check_skip]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.check_skip.outputs.skip == 'false' &&
+      needs.setup_and_test.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        with:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Deploy backend
+        run: flyctl deploy --remote-only --wait-timeout 15
+        working-directory: ./server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-frontend:
+    needs: [deploy-backend, check_skip]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.check_skip.outputs.skip == 'false' &&
+      needs.deploy-backend.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        with:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Deploy frontend
+        run: flyctl deploy --remote-only --wait-timeout 15
+        working-directory: ./client
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  tag_release:
+    needs: [deploy-frontend]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.deploy-frontend.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+
+  notification:
+    needs: [check_skip, setup_and_test, build, e2e, deploy-frontend]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.check_skip.outputs.skip == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on failure
+        if: ${{ needs.setup_and_test.result == 'failure' || needs.build.result == 'failure' || needs.e2e.result == 'failure' || needs.deploy-frontend.result == 'failure' }}
+        uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          username: "GitHub Actions (FAILURE)"
+          content: "❌ **BUILD/DEPLOYMENT FAILED** - Check commit details above to identify problematic commit"
+          status: ${{ needs.setup_and_test.result }}
+          color: "FF0000"
+      - name: Notify on success
+        if: ${{ needs.setup_and_test.result == 'success' && needs.build.result == 'success' && needs.e2e.result == 'success' && needs.deploy-frontend.result == 'success' }}
+        uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          username: "GitHub Actions (SUCCESS)"
+          content: "✅ **NEW VERSION DEPLOYED SUCCESSFULLY**"
+          title: "Deployment Succeeded"
+          description: "The latest changes have been successfully deployed to production."
+          url: "https://bloglist-frontend.fly.dev/"
+          status: success
