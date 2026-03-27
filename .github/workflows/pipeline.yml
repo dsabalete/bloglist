@@ -123,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: client-dist
-          path: client/dist
+          path: server/dist
           retention-days: 1
 
   e2e:
@@ -173,7 +173,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download build artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: client-dist
       - name: Setup Flyctl
