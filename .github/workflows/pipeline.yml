@@ -198,31 +198,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
 
-  notification:
-    needs: [check_skip, setup_and_test, build, e2e, deploy-frontend]
-    if: |
-      always() &&
-      github.event_name == 'push' &&
-      needs.check_skip.outputs.skip == 'false'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify on failure
-        if: ${{ needs.setup_and_test.result == 'failure' || needs.build.result == 'failure' || needs.e2e.result == 'failure' || needs.deploy-frontend.result == 'failure' }}
-        uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          username: "GitHub Actions (FAILURE)"
-          content: "❌ **BUILD/DEPLOYMENT FAILED** - Check commit details above to identify problematic commit"
-          status: ${{ needs.setup_and_test.result }}
-          color: "FF0000"
-      - name: Notify on success
-        if: ${{ needs.setup_and_test.result == 'success' && needs.build.result == 'success' && needs.e2e.result == 'success' && needs.deploy-frontend.result == 'success' }}
-        uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          username: "GitHub Actions (SUCCESS)"
-          content: "✅ **NEW VERSION DEPLOYED SUCCESSFULLY**"
-          title: "Deployment Succeeded"
-          description: "The latest changes have been successfully deployed to production."
-          url: "https://bloglist-frontend.fly.dev/"
-          status: success
+  # notification:
+  #   needs: [check_skip, setup_and_test, build, e2e, deploy-frontend]
+  #   if: |
+  #     always() &&
+  #     github.event_name == 'push' &&
+  #     needs.check_skip.outputs.skip == 'false'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Notify on failure
+  #       if: ${{ needs.setup_and_test.result == 'failure' || needs.build.result == 'failure' || needs.e2e.result == 'failure' || needs.deploy-frontend.result == 'failure' }}
+  #       uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
+  #       with:
+  #         webhook: ${{ secrets.DISCORD_WEBHOOK }}
+  #         username: "GitHub Actions (FAILURE)"
+  #         content: "❌ **BUILD/DEPLOYMENT FAILED** - Check commit details above to identify problematic commit"
+  #         status: ${{ needs.setup_and_test.result }}
+  #         color: "FF0000"
+  #     - name: Notify on success
+  #       if: ${{ needs.setup_and_test.result == 'success' && needs.build.result == 'success' && needs.e2e.result == 'success' && needs.deploy-frontend.result == 'success' }}
+  #       uses: sarisia/actions-status-discord@eb045afee445dc055c18d3d90bd0f244fd062708
+  #       with:
+  #         webhook: ${{ secrets.DISCORD_WEBHOOK }}
+  #         username: "GitHub Actions (SUCCESS)"
+  #         content: "✅ **NEW VERSION DEPLOYED SUCCESSFULLY**"
+  #         title: "Deployment Succeeded"
+  #         description: "The latest changes have been successfully deployed to production."
+  #         url: "https://bloglist-frontend.fly.dev/"
+  #         status: success

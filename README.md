@@ -87,6 +87,32 @@ npm test
 npm run client:test
 ```
 
+## Deployment
+
+### Docker
+
+```bash
+# Build and run locally
+docker build -t bloglist .
+docker run -p 3001:3001 --env-file .env bloglist
+```
+
+### Deploy to Fly.io
+
+```bash
+# Launch app
+fly launch --no-deploy
+
+# Set secrets
+fly secrets set MONGODB_URI="mongodb://..."
+fly secrets set JWT_SECRET="your-secret-key"
+
+# Deploy using Dockerfile
+fly deploy
+```
+
+> The `Dockerfile` builds both frontend and backend in a single container. Express serves static files from `server/dist` and API routes from `/api/*`.
+
 ## API Endpoints
 
 - `GET /api/blogs` - List all blogs

@@ -13,6 +13,7 @@ export default [
       'node_modules',
       'eslint.config.js',
       'vite.config.js',
+      'server.js',
       '**/coverage/**',
     ],
   },
@@ -23,6 +24,8 @@ export default [
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
+        ...globals.node,
+        process: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',
