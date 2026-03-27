@@ -1,4 +1,4 @@
-POST http://localhost:3003/api/blogs
+POST http://localhost:3001/api/blogs
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBlcGl0byIsImlkIjoiNjk3Yjk5YTk1NWFiNjA3MTkzY2YyZmRhIiwiaWF0IjoxNzY5Nzc0Mzk2LCJleHAiOjE3Njk3Nzc5OTZ9.ZhKen405CYNP5YQ5SqPWBEw1zN-2PHcnW5g3Lk6IMdM
 
@@ -10,7 +10,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBlc
 }
 
 ### Create blog entry without likes
-POST http://localhost:3003/api/blogs
+POST http://localhost:3001/api/blogs
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBlcGl0byIsImlkIjoiNjk3Yjk5YTk1NWFiNjA3MTkzY2YyZmRhIiwiaWF0IjoxNzY5Nzk5MjA2LCJleHAiOjE3Njk4MDI4MDZ9.OiPquJJbrT64QARspuWc8HquGSOAueviNbDnXCFryIE
 
@@ -22,7 +22,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBlc
 }
 
 ### Create blog without title
-POST http://localhost:3003/api/blogs
+POST http://localhost:3001/api/blogs
 Content-Type: application/json
 
 {
@@ -32,7 +32,7 @@ Content-Type: application/json
 }
 
 ### Create blog without url
-POST http://localhost:3003/api/blogs
+POST http://localhost:3001/api/blogs
 Content-Type: application/json
 
 {
@@ -42,4 +42,4 @@ Content-Type: application/json
 }
 
 ### List of all blog entries
-GET http://localhost:3003/api/blogs
+GET http://localhost:3001/api/blogs
