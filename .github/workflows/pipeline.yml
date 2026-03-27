@@ -143,7 +143,7 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-  deploy-backend:
+  deploy:
     needs: [setup_and_test, check_skip]
     if: |
       always() &&
@@ -157,38 +157,17 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - name: Deploy backend
-        run: flyctl deploy --remote-only --wait-timeout 15
-        working-directory: ./server
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-  deploy-frontend:
-    needs: [deploy-backend, check_skip]
-    if: |
-      always() &&
-      github.event_name == 'push' &&
-      needs.check_skip.outputs.skip == 'false' &&
-      needs.deploy-backend.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-        with:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - name: Deploy frontend
-        run: flyctl deploy --remote-only --wait-timeout 15
-        working-directory: ./client
+      - name: Deploy app
+        run: flyctl deploy --remote-only --wait-timeout 15 --dockerfile ./Dockerfile
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   tag_release:
-    needs: [deploy-frontend]
+    needs: [deploy]
     if: |
       always() &&
       github.event_name == 'push' &&
-      needs.deploy-frontend.result == 'success'
+      needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
