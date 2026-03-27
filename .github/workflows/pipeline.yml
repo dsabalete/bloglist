@@ -124,6 +124,16 @@ jobs:
     needs: [setup_and_test, build, check_skip]
     if: ${{ needs.check_skip.outputs.skip == 'false' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -139,6 +149,9 @@ jobs:
       - name: Run client tests
         run: npm test --prefix client
       - name: Run server tests
+        env:
+          TEST_MONGODB_URI: mongodb://localhost:27017/bloglist-test
+          JWT_SECRET: ci-test-secret-key-for-testing-purposes-only
         run: npm test --prefix server
 
   deploy:
