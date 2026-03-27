@@ -22,16 +22,21 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy package files and install production deps
+# Copy package files and server directory
 COPY package*.json ./
-RUN npm ci --omit=dev && cd server && npm ci --omit=dev
-
-# Copy built client and server code
-COPY --from=build /app/server/dist ./server/dist
 COPY server ./server
+
+# Install production dependencies for root and server
+WORKDIR /app/server
+RUN npm ci --omit=dev
+WORKDIR /app
+RUN npm ci --omit=dev
+
+# Copy built client files
+COPY --from=build /app/server/dist ./server/dist
 
 # Expose port (should match PORT in fly.toml)
 EXPOSE 3001
 
 # Start the server
-CMD ["npm", "run", "start", "--prefix", "server"]
+CMD ["node", "server/index.js"]
