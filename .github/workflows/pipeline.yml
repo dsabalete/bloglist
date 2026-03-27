@@ -119,12 +119,6 @@ jobs:
           key: node-modules-${{ hashFiles('client/package-lock.json', 'server/package-lock.json') }}
       - name: Build client
         run: npm run build --prefix client
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-dist
-          path: server/dist
-          retention-days: 1
 
   e2e:
     needs: [setup_and_test, build, check_skip]
@@ -172,10 +166,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: client-dist
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be
         with:
