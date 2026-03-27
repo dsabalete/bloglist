@@ -10,6 +10,9 @@ COPY package*.json ./
 COPY server/package*.json ./server/
 COPY client/package*.json ./client/
 
+# Copy client source code (needed for build)
+COPY client/ ./client/
+
 # Install root dependencies
 RUN npm ci
 

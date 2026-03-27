@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for bloglist-rk2gnq-rough-butterfly-380 on 2026-03-27T19:08:00+01:00
+# fly.toml app configuration file generated for bloglist-rk2gnq-dawn-resonance-6647 on 2026-03-27T19:20:20+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'bloglist-rk2gnq-rough-butterfly-380'
+app = 'bloglist-rk2gnq-dawn-resonance-6647'
 primary_region = 'cdg'
 
 [build]
