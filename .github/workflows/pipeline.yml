@@ -94,6 +94,7 @@ jobs:
       - name: Check style and run tests
         env:
           TEST_MONGODB_URI: mongodb://localhost:27017/bloglist-test
+          JWT_SECRET: ci-test-secret-key-for-testing-purposes-only
         run: |
           npm run lint --prefix client
           npm run lint --prefix server
