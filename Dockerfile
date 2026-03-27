@@ -20,7 +20,8 @@ WORKDIR /app
 
 # Copy only server files (not root, not client)
 COPY server/package*.json server/
-COPY server/index.js server/app.js server/controllers server/models server/utils server/dist ./server/
+COPY server/index.js server/app.js server/controllers server/models server/utils ./server/
+COPY --from=build /app/server/dist ./server/dist
 
 # Install server dependencies only
 WORKDIR /app/server
