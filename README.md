@@ -2,6 +2,8 @@
 
 A full-stack blog application with a React frontend and Node.js/Express backend.
 
+Public URL: https://bloglist-rk2gnq-dawn-resonance-6647.fly.dev/
+
 ## Tech Stack
 
 - **Frontend**: React + Vite
