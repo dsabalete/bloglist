@@ -6,119 +6,128 @@ Public URL: https://bloglist-rk2gnq-dawn-resonance-6647.fly.dev/
 
 ## Tech Stack
 
-- **Frontend**: React + Vite
-- **Backend**: Node.js + Express
-- **Testing**: Jest (server), React Testing Library (client)
+- **Frontend**: React 19 + Vite 6
+- **Backend**: Node.js + Express + MongoDB/Mongoose
+- **Testing**: Vitest (frontend), Node test (backend)
 
 ## Project Structure
 
 ```
 bloglist/
-├── client/              # React frontend
+├── frontend/              # React + Vite frontend
 │   ├── src/
-│   │   ├── components/  # React components
-│   │   ├── services/    # API client modules
-│   │   └── App.jsx      # Main app component
+│   │   ├── components/    # React components
+│   │   ├── services/     # API client modules
+│   │   └── App.jsx       # Main app component
+│   ├── dev.Dockerfile    # Development container
 │   └── package.json
-├── server/              # Express backend
-│   ├── controllers/     # Route handlers
-│   ├── models/          # Mongoose models
-│   ├── tests/           # Jest tests
-│   ├── utils/           # Helpers & config
-│   └── app.js           # Express app setup
-└── package.json         # Root scripts
+├── backend/               # Express backend
+│   ├── controllers/      # Route handlers
+│   ├── models/           # Mongoose models
+│   ├── tests/            # Tests
+│   ├── utils/            # Helpers & config
+│   ├── dev.Dockerfile    # Development container
+│   └── package.json
+├── nginx.dev.conf        # Nginx reverse proxy config
+├── docker-compose.dev.yml # Docker Compose for development
+└── Dockerfile           # Production container
 ```
 
 ## Available Scripts
 
-| Script                | Description                               |
-| --------------------- | ----------------------------------------- |
-| `npm run dev`         | Start both frontend & backend in dev mode |
-| `npm run build`       | Build frontend for production             |
-| `npm run lint`        | Run linter on both client & server        |
-| `npm test`            | Run backend tests                         |
-| `npm run client:test` | Run frontend tests                        |
+| Script                | Description                        |
+| --------------------- | ---------------------------------- |
+| `npm run dev`         | Start frontend + backend in dev mode |
+| `npm run build`       | Build frontend for production       |
+| `npm run lint`        | Run linter on both                |
+| `npm test`           | Run backend tests                |
+| `npm run client:test` | Run frontend tests               |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18+)
-- MongoDB (for the backend)
+- Node.js (v20+)
+- Docker & Docker Compose (optional)
 
-### Installation
+### Local Development
 
 ```bash
 npm install
-```
-
-### Development
-
-```bash
-# Run both client and server (uses Vite proxy)
 npm run dev
 ```
 
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 
-### Production Build & Deploy
-
-The app deploys as a single unit. Express serves both the API and the built frontend.
+### Docker Development
 
 ```bash
-# Build client → outputs to server/dist
-npm run build
+docker-compose -f docker-compose.dev.yml up --build
+```
 
-# Start production server
+Services:
+- Frontend: http://localhost (via nginx)
+- Backend: http://localhost/api
+- MongoDB: localhost:27017
+
+### Production Build
+
+```bash
+npm run build
 npm run server:start
 ```
 
-The Express server serves static files from `server/dist` and API routes from `/api/*`.
-
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001
+Express serves static files from `backend/dist` and API routes from `/api/*`.
 
 ### Testing
 
 ```bash
-# Backend tests
-npm test
-
-# Frontend tests
-npm run client:test
+npm test           # Backend tests
+npm run client:test # Frontend tests
 ```
 
-## Deployment
+## Docker
 
-### Docker
+### Development
 
 ```bash
-# Build and run locally
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+Access at http://localhost. Nginx proxies:
+- `/` → frontend (Vite dev server)
+- `/api/*` → backend (Express)
+
+### Production
+
+```bash
 docker build -t bloglist .
 docker run -p 3001:3001 --env-file .env bloglist
 ```
 
-### Deploy to Fly.io
+## Deploy to Fly.io
 
 ```bash
-# Launch app
 fly launch --no-deploy
-
-# Set secrets
 fly secrets set MONGODB_URI="mongodb://..."
 fly secrets set JWT_SECRET="your-secret-key"
-
-# Deploy using Dockerfile
 fly deploy
 ```
 
-> The `Dockerfile` builds both frontend and backend in a single container. Express serves static files from `server/dist` and API routes from `/api/*`.
-
 ## API Endpoints
 
-- `GET /api/blogs` - List all blogs
-- `POST /api/blogs` - Create a new blog
-- `DELETE /api/blogs/:id` - Delete a blog
-- `POST /api/login` - User login
-- `POST /api/users` - Create a new user
+| Method   | Endpoint         | Description              |
+| -------- | --------------- | ------------------------ |
+| GET      | /api/blogs      | List all blogs           |
+| POST     | /api/blogs      | Create new blog         |
+| DELETE   | /api/blogs/:id  | Delete blog             |
+| POST     | /api/login     | User login              |
+| POST     | /api/users     | Create new user         |
+| GET      | /api/health    | Health check            |
+
+## Seed Data
+
+On first run, the backend seeds sample data:
+- Users: `david`, `alice`, `bob` (password: `password123`)
+- 6 sample blogs
