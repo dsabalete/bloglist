@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   build: {
-    outDir: '../server/dist',
+    outDir: '../backend/dist',
   },
   test: {
     environment: 'jsdom',
