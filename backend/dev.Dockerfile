@@ -10,6 +10,4 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3001
-
 CMD ["nodemon", "--exec", "node", "-r", "dotenv/config", "index.js"]
