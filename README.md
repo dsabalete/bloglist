@@ -17,20 +17,24 @@ bloglist/
 ├── frontend/              # React + Vite frontend
 │   ├── src/
 │   │   ├── components/    # React components
-│   │   ├── services/     # API client modules
-│   │   └── App.jsx       # Main app component
-│   ├── dev.Dockerfile    # Development container
+│   │   ├── services/      # API client modules
+│   │   └── App.jsx        # Main app component
+│   ├── dev.Dockerfile     # Development container
+│   ├── Dockerfile         # Production frontend container
 │   └── package.json
 ├── backend/               # Express backend
-│   ├── controllers/      # Route handlers
-│   ├── models/           # Mongoose models
-│   ├── tests/            # Tests
-│   ├── utils/            # Helpers & config
-│   ├── dev.Dockerfile    # Development container
+│   ├── controllers/       # Route handlers
+│   ├── models/            # Mongoose models
+│   ├── tests/             # Tests
+│   ├── utils/             # Helpers & config
+│   ├── dev.Dockerfile     # Development container
+│   ├── Dockerfile         # Production backend container
 │   └── package.json
+├── nginx.conf            # Production reverse proxy config
 ├── nginx.dev.conf        # Nginx reverse proxy config
 ├── docker-compose.dev.yml # Docker Compose for development
-└── Dockerfile           # Production container
+├── docker-compose.yml     # Docker Compose for production
+└── Dockerfile             # Single-container production image
 ```
 
 ## Available Scripts
@@ -100,6 +104,22 @@ Access at http://localhost. Nginx proxies:
 - `/api/*` → backend (Express)
 
 ### Production
+
+Run the split production stack with Docker Compose:
+
+```bash
+JWT_SECRET=your-secret-key docker compose up --build
+```
+
+The public app is served by the `frontend` container on port `80` by default, uses the root `nginx.conf` mounted by Docker Compose to proxy `/api/*` to the backend container, and persists MongoDB data in the `mongodb_data` volume.
+
+You can change the published port with `APP_PORT`, for example:
+
+```bash
+APP_PORT=8080 JWT_SECRET=your-secret-key docker compose up --build
+```
+
+The repository also keeps the original single-container production image:
 
 ```bash
 docker build -t bloglist .
